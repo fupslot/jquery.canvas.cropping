@@ -7,7 +7,7 @@
 		{
 			if ( config.sceneImage )
 			{
-				aCtx.clearRect(0, 0, global.canvasWidth, global.canvasHeight);
+				aCtx.clearRect(0, 0, widget.canvasWidth, widget.canvasHeight);
 				var w, h;
 				w = config.sceneImage.width;
 				h = config.sceneImage.height;
@@ -41,16 +41,16 @@
 			image.onload = function()
 			{
 				var posX, posY;
-				posX = (global.$canvas[0].offsetWidth / 2)  - (rect.width / 2);
-				posY = (global.$canvas[0].offsetHeight / 2) - (rect.height / 2);
+				posX = (widget.element[0].offsetWidth / 2)  - (rect.width / 2);
+				posY = (widget.element[0].offsetHeight / 2) - (rect.height / 2);
 				
-				//scene.clear(global.ctx);
-				global.ctx.clearRect(0, 0, global.canvasWidth, global.canvasWidth);
-				global.ctx.drawImage(image, posX, posY);
+				//scene.clear(widget.ctx);
+				widget.ctx.clearRect(0, 0, widget.canvasWidth, widget.canvasWidth);
+				widget.ctx.drawImage(image, posX, posY);
 
-				if ( global.oncropCB )
+				if ( widget.oncropCB )
 				{
-					global.oncropCB(dataImage);
+					widget.oncropCB(dataImage);
 				}
 			}
 			image.src = dataImage;
@@ -75,25 +75,25 @@
 			if ( mode.fullscreen )
 			{
 				// save current size
-				global.copyTo(rect, global.rectState);
-				global.copyTo({x: 0, y: 0, width: config.sceneImage.width, height: config.sceneImage.height}, rect);
+				widget.copyTo(rect, widget.rectState);
+				widget.copyTo({x: 0, y: 0, width: config.sceneImage.width, height: config.sceneImage.height}, rect);
 			}
 			else
 			{
-				global.copyTo(global.rectState, rect);
-				global.rectState = {};
+				widget.copyTo(widget.rectState, rect);
+				widget.rectState = {};
 			}
 			// redraw the scene
-			scene.clear(global.ctx);
+			scene.clear(widget.ctx);
 			// clear_scene();
-			rect.draw(global.ctx);
+			rect.draw(widget.ctx);
 		},
 
 		mouseDown:
 		function(x, y)
 		{
-			global.dragStart.x = x;
-			global.dragStart.y = y;
+			widget.dragStart.x = x;
+			widget.dragStart.y = y;
 
 			// click on a button
 			var button = rect.containButton(x, y);
@@ -108,8 +108,8 @@
 				return;
 			}
 
-			global.capturedEdge = rect.containEdge(x, y);
-			if ( global.capturedEdge )
+			widget.capturedEdge = rect.containEdge(x, y);
+			if ( widget.capturedEdge )
 			{
 				mode.expanding = true; //expanding mode
 			}
@@ -121,7 +121,7 @@
 			mode.dragging  = false;
 			mode.expanding = false;
 
-			global.capturedEdge = undefined;
+			widget.capturedEdge = undefined;
 		},
 
 		mouseMove:
@@ -130,31 +130,31 @@
 			var dx = 0, dy = 0;
 			if (!mode.fullscreen && ( mode.dragging || mode.expanding ))
 			{
-				scene.clear(global.ctx);
-				if ( x < global.dragStart.x ) {
-					dx = -(global.dragStart.x - x);
+				scene.clear(widget.ctx);
+				if ( x < widget.dragStart.x ) {
+					dx = -(widget.dragStart.x - x);
 				}
 				else {
-					dx = x - global.dragStart.x;
+					dx = x - widget.dragStart.x;
 				}
-				if ( y < global.dragStart.y ) {
-					dy = -(global.dragStart.y - y);
+				if ( y < widget.dragStart.y ) {
+					dy = -(widget.dragStart.y - y);
 				}
 				else {
-					dy = y - global.dragStart.y;
+					dy = y - widget.dragStart.y;
 				}
 			}
 			// make copy of the original object to safety manipulate its properties
 			var rectCopy = {};
-			global.copyTo(rect, rectCopy);
+			widget.copyTo(rect, rectCopy);
 
 			if (!mode.fullscreen && mode.dragging)
 			{
 				rectCopy.x += dx;
 				rectCopy.y += dy;
 
-				global.dragStart.x += dx;
-				global.dragStart.y += dy;
+				widget.dragStart.x += dx;
+				widget.dragStart.y += dy;
 				// make sute that a user not drag out of the visible area
 				if (!this.outOfBoundary(
 					{
@@ -171,13 +171,13 @@
 					rect.width  = rectCopy.width;
 					rect.height = rectCopy.height;
 				}
-				rect.draw(global.ctx);
+				rect.draw(widget.ctx);
 			}
 
 			if ( !mode.fullscreen && mode.expanding )
 			{
 				// up & left
-				if ( global.capturedEdge.cursor === "nw-resize" )
+				if ( widget.capturedEdge.cursor === "nw-resize" )
 				{
 					rectCopy.x += dx;
 					rectCopy.width  -= dx;
@@ -185,35 +185,35 @@
 					rectCopy.height = rectCopy.width / config.proportion;
 				}
 				// up & right
-				if (global.capturedEdge.cursor === "ne-resize")
+				if (widget.capturedEdge.cursor === "ne-resize")
 				{
 					rectCopy.width += dx;
 					rectCopy.y -= (rectCopy.width / config.proportion) - rectCopy.height;
 					rectCopy.height = rectCopy.width / config.proportion;
 				}
-				if ( global.capturedEdge.cursor === "se-resize" )
+				if ( widget.capturedEdge.cursor === "se-resize" )
 				{
 					rectCopy.width += dx; 
 					rectCopy.height = rectCopy.width / config.proportion;
 				}
 				// down & left
-				if ( global.capturedEdge.cursor === "sw-resize")
+				if ( widget.capturedEdge.cursor === "sw-resize")
 				{
 					rectCopy.x += dx;
 					rectCopy.width -= dx;
 					rectCopy.height = rectCopy.width / config.proportion;
 				}
-				global.dragStart.x += dx;
-				global.dragStart.y += dy;
+				widget.dragStart.x += dx;
+				widget.dragStart.y += dy;
 				
 				// size of the rectangle cannot be less than the default one
 				// and it stays in canvas boundary
 				if ( !scene.minRectSize(rectCopy) && !scene.outOfBoundary(rectCopy) )
 				{
-					global.copyTo(rectCopy, rect);
+					widget.copyTo(rectCopy, rect);
 				}
 				
-				rect.draw(global.ctx);
+				rect.draw(widget.ctx);
 			}
 
 			rect.setCursor(x, y);
@@ -345,7 +345,7 @@
 			{
 				// set shade a background to half transparent
 				aCtx.fillStyle = "rgba(0, 0, 0, 0.5)";
-				aCtx.fillRect(0, 0, global.canvasWidth, global.canvasHeight);
+				aCtx.fillRect(0, 0, widget.canvasWidth, widget.canvasHeight);
 				aCtx.fill();
 				aCtx.drawImage(config.sceneImage, this.x, this.y, this.width, this.height, this.x, this.y, this.width, this.height);
 				// draw edges
@@ -359,21 +359,21 @@
 		{
 			if ( this.containButton(x, y) )
 			{
-				global.$canvas.css("cursor", "pointer");
+				widget.element.css("cursor", "pointer");
 				return;
 			}
 			if ( !mode.fullscreen && this.contain(x, y) )
 			{
-				global.$canvas.css("cursor", "move");
+				widget.element.css("cursor", "move");
 				return;
 			}
 			var edge = this.containEdge(x, y);
 			if ( !mode.fullscreen && edge )
 			{
-				global.$canvas.css("cursor", edge.cursor);
+				widget.element.css("cursor", edge.cursor);
 				return;
 			}
-			global.$canvas.css("cursor", "default");
+			widget.element.css("cursor", "default");
 		}
 
 	};
@@ -405,10 +405,10 @@
 
 	};
 
-	var global =
+	var widget =
 	{
 		// canvas element
-		$canvas:      undefined,
+		element:      undefined,
 		canvasWidth:  undefined,
 		canvasHeight: undefined,
 		ctx:          undefined,
@@ -443,80 +443,91 @@
 
 	var config;
 
-	function init()
-	{
-		console.log("ss");
-		// this plugin is relevant for CANVAS elements only
-		if (global.$canvas.get(0).tagName !== "CANVAS") { return; }
-		
-		global.canvasWidth  = global.$canvas.get(0).width;
-		global.canvasHeight = global.$canvas.get(0).height;
-		global.ctx = global.$canvas.get(0).getContext("2d");
+	var methods = {
 
-		global.$canvas.mousedown(function(e) {
-			var relOffset = scene.offset();
-			// console.log("top:%d, left:%d", this.offsetTop, this.offsetLeft);
-			var x = e.clientX - relOffset.left - this.offsetLeft;
-			var y = e.clientY - relOffset.top  - this.offsetTop;
-			console.log("x:%d, y:%d", x, y);
-			scene.mouseDown(x, y);
-		})
-		.mouseup(function() {
-			scene.mouseUp();
-		})
-		.mousemove(function(e) {
-			// console.log("w:%d, h:%d", this.offsetTop, this.offsetLeft);
-			var relOffset = scene.offset();
-			var x = e.clientX - relOffset.left - this.offsetLeft;
-			var y = e.clientY - relOffset.top  - this.offsetTop;
-			scene.mouseMove(x, y);
-		});
-
-		// calculate default selected area
-		rect.width  = Math.floor(config.sceneImage.width * 0.66);
-		rect.height = rect.width / config.proportion;
-		rect.x = Math.floor((config.sceneImage.width - rect.width) / 2);
-		rect.y = Math.floor((config.sceneImage.height - rect.height) / 2);
-
-		// add fullscreen button
-		rect.addButton({
-			image: config.fullscreenButtonImage,
-			label: config.buttons.fullscreen.label,
-			onclick: scene.fullscreen
-		});
-
-		// add apply button
-		rect.addButton({
-			image: config.applyButtonImage,
-			label: config.buttons.apply.label,
-			onclick: scene.clip
-		});
-
-		// draw scene
-		scene.clear(global.ctx);
-		rect.draw(global.ctx);
-	}
-
-	$.fn.cropping = function(options, onCropCB)
-	{
-		config = $.extend(
+		init:
+		function(options)
 		{
-			sceneImage:            undefined,
-			fullscreenButtonImage: undefined,
-			applyButtonImage:      undefined
-		}, defaults, options);
+			config = $.extend(
+			{
+				sceneImage:            undefined,
+				fullscreenButtonImage: undefined,
+				applyButtonImage:      undefined
+			}, defaults, options);
 
-		global.$canvas = this;
-		global.oncropCB = onCropCB;
+			widget.oncropCB = config.oncrop;
 
+			// this plugin is relevant for CANVAS elements only
+			if (widget.element.get(0).tagName !== "CANVAS")
+			{
+				$.error("This widget works with CANVAS elements only!");
+			}
+			
+			widget.canvasWidth  = widget.element.get(0).width;
+			widget.canvasHeight = widget.element.get(0).height;
+			widget.ctx = widget.element.get(0).getContext("2d");
+
+			if (!widget.element.data("init"))
+			{
+				widget.element.mousedown(function(e) {
+					var relOffset = scene.offset();
+					// console.log("top:%d, left:%d", this.offsetTop, this.offsetLeft);
+					var x = e.clientX - relOffset.left - this.offsetLeft;
+					var y = e.clientY - relOffset.top  - this.offsetTop;
+					// console.log("x:%d, y:%d", x, y);
+					scene.mouseDown(x, y);
+				})
+				.mouseup(function() {
+					scene.mouseUp();
+				})
+				.mousemove(function(e) {
+					// console.log("w:%d, h:%d", this.offsetTop, this.offsetLeft);
+					var relOffset = scene.offset();
+					var x = e.clientX - relOffset.left - this.offsetLeft;
+					var y = e.clientY - relOffset.top  - this.offsetTop;
+					scene.mouseMove(x, y);
+				});
+				widget.element.data("init", true);
+			}
+
+			resLoad(function() {
+				// calculate default selected area
+				rect.width  = Math.floor(config.sceneImage.width * 0.66);
+				rect.height = rect.width / config.proportion;
+				rect.x = Math.floor((config.sceneImage.width - rect.width) / 2);
+				rect.y = Math.floor((config.sceneImage.height - rect.height) / 2);
+
+				// add fullscreen button
+				rect.addButton({
+					image: config.fullscreenButtonImage,
+					label: config.buttons.fullscreen.label,
+					onclick: scene.fullscreen
+				});
+
+				// add apply button
+				rect.addButton({
+					image: config.applyButtonImage,
+					label: config.buttons.apply.label,
+					onclick: scene.clip
+				});
+
+				// draw scene
+				scene.clear(widget.ctx);
+				rect.draw(widget.ctx);
+			});
+		}
+	};
+
+	function resLoad(aCallback)
+	{
 		// load scene image
 		config.sceneImage = new Image();
 		config.sceneImage.onload = config.sceneImage.onerror = function(e)
 		{
-			// keep going when the scene image loaded only 
+			// keep going if the scene image loaded only 
 			if (e.type === "load")
 			{
-				global.$canvas.attr({
+				widget.element.attr({
 					width: config.sceneImage.width,
 					height: config.sceneImage.height
 				});
@@ -524,8 +535,7 @@
 				config.fullscreenButtonImage.onload = config.fullscreenButtonImage.onerror = function() {
 					config.applyButtonImage = new Image();
 					config.applyButtonImage.onload = config.applyButtonImage.onerror = function() {
-						// all images loaaded draw scene
-						init();
+						aCallback();
 					}
 					config.applyButtonImage.src = config.buttons.apply.image;
 				}
@@ -533,7 +543,19 @@
 			}
 		}
 		config.sceneImage.src = config.scene;
+	}
 
+	$.fn.cropping = function(method)
+	{
+		widget.element = this;
+		// Method calling logic
+		if ( methods[method] ) {
+			return methods[ method ].apply( this, Array.prototype.slice.call( arguments, 1 ));
+		} else if ( typeof method === 'object' || ! method ) {
+			return methods.init.apply( this, arguments );
+		} else {
+			$.error( 'Method ' +  method + ' does not exist on jQuery.cropping' );
+		} 
 	}
 			
 })(jQuery)
