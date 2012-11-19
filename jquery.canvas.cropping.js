@@ -462,10 +462,6 @@
 			{
 				$.error("This widget works with CANVAS elements only!");
 			}
-			
-			widget.canvasWidth  = widget.element.get(0).width;
-			widget.canvasHeight = widget.element.get(0).height;
-			widget.ctx = widget.element.get(0).getContext("2d");
 
 			if (!widget.element.data("init"))
 			{
@@ -491,6 +487,10 @@
 			}
 
 			resLoad(function() {
+				widget.canvasWidth  = widget.element.get(0).width;
+				widget.canvasHeight = widget.element.get(0).height;
+				widget.ctx = widget.element.get(0).getContext("2d");
+
 				// calculate default selected area
 				rect.width  = Math.floor(config.sceneImage.width * 0.66);
 				rect.height = rect.width / config.proportion;
