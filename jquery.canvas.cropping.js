@@ -7,7 +7,10 @@
 		{
 			if ( config.sceneImage )
 			{
-				aCtx.clearRect(0, 0, widget.canvasWidth, widget.canvasHeight);
+				aCtx.fillStyle = "black";
+				aCtx.fillRect(0, 0, widget.canvasWidth, widget.canvasHeight);
+				// aCtx.clearRect(0, 0, widget.canvasWidth, widget.canvasHeight);
+				// aCtx
 				var w, h;
 				w = config.sceneImage.width;
 				h = config.sceneImage.height;
@@ -26,6 +29,7 @@
 			}
 			return offset;
 		},
+
 		clip:
 		function()
 		{
@@ -41,7 +45,7 @@
 			image.onload = function()
 			{
 				var posX, posY;
-				posX = (widget.element[0].offsetWidth / 2)  - (rect.width / 2);
+				posX = (widget.element[0].offsetWidth / 2)  - (rect.width  / 2);
 				posY = (widget.element[0].offsetHeight / 2) - (rect.height / 2);
 				
 				//scene.clear(widget.ctx);
@@ -59,7 +63,14 @@
 		outOfBoundary:
 		function(aRect)
 		{
-			return aRect.x <= 0 || aRect.y <= 0 || aRect.width >= config.sceneImage.width || aRect.height >= config.sceneImage.height;
+			return aRect.x <= 0
+				|| aRect.y <= 0 
+				// the selected area cannot be out of the image boundaries
+				|| aRect.width  > config.sceneImage.width
+				|| aRect.height > config.sceneImage.height
+				// the selected area cannot be out of the canvas boundaries
+				|| aRect.width  > widget.canvasWidth
+				|| aRect.height > widget.canvasHeight;
 		},
 
 		minRectSize:
@@ -527,10 +538,12 @@
 			// keep going if the scene image loaded only 
 			if (e.type === "load")
 			{
-				widget.element.attr({
-					width: config.sceneImage.width,
-					height: config.sceneImage.height
-				});
+				// sets a canvas size according to a loaded image 
+				// widget.element.attr({
+				// 	width: config.sceneImage.width,
+				// 	height: config.sceneImage.height
+				// });
+
 				config.fullscreenButtonImage = new Image();
 				config.fullscreenButtonImage.onload = config.fullscreenButtonImage.onerror = function() {
 					config.applyButtonImage = new Image();
