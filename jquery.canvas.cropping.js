@@ -2,15 +2,18 @@
 	
 	var scene = 
 	{
+		// scene width and height are equivalent to a canvas width and height
+		width: 0,
+		hight: 0,
+
 		clear:
 		function(aCtx)
 		{
 			if ( config.sceneImage )
 			{
 				aCtx.fillStyle = "black";
-				aCtx.fillRect(0, 0, widget.canvasWidth, widget.canvasHeight);
-				// aCtx.clearRect(0, 0, widget.canvasWidth, widget.canvasHeight);
-				// aCtx
+				aCtx.fillRect(0, 0, scene.width, scene.height);
+
 				var w, h;
 				w = config.sceneImage.width;
 				h = config.sceneImage.height;
@@ -49,28 +52,37 @@
 				posY = (widget.element[0].offsetHeight / 2) - (rect.height / 2);
 				
 				//scene.clear(widget.ctx);
-				widget.ctx.clearRect(0, 0, widget.canvasWidth, widget.canvasWidth);
+				widget.ctx.clearRect(0, 0, scene.width, scene.height);
 				widget.ctx.drawImage(image, posX, posY);
 
-				if ( widget.oncropCB )
+				if ( config.oncrop )
 				{
-					widget.oncropCB(dataImage);
+					try {
+						config.oncrop(dataImage);
+					}
+					catch(e) { /* unexpected error */ }	
 				}
 			}
 			image.src = dataImage;
 		},
 
+		workArea:
+		function ()
+		{
+			var image = config.sceneImage;
+			return {
+				width : (image.width  > scene.width)  ? scene.width  : image.width,
+				height: (image.height > scene.height) ? scene.height : image.height
+			};
+		},
+
 		outOfBoundary:
 		function(aRect)
 		{
-			return aRect.x <= 0
-				|| aRect.y <= 0 
-				// the selected area cannot be out of the image boundaries
-				|| aRect.width  > config.sceneImage.width
-				|| aRect.height > config.sceneImage.height
-				// the selected area cannot be out of the canvas boundaries
-				|| aRect.width  > widget.canvasWidth
-				|| aRect.height > widget.canvasHeight;
+			return   aRect.x <= 0
+						|| aRect.y <= 0
+						|| aRect.width  > scene.workArea().width
+						|| aRect.height > scene.workArea().height;
 		},
 
 		minRectSize:
@@ -85,12 +97,14 @@
 			mode.fullscreen = !mode.fullscreen;
 			if ( mode.fullscreen )
 			{
-				// save current size
+				// saving a rect size in order to come back to its current state when a fullscreen mmode is turned off
 				widget.copyTo(rect, widget.rectState);
-				widget.copyTo({x: 0, y: 0, width: config.sceneImage.width, height: config.sceneImage.height}, rect);
+				widget.copyTo({x: 0, y: 0, width: scene.workArea().width, height: scene.workArea().height}, rect);
 			}
 			else
 			{
+				// a fullsceen mode is turned off,
+				// set a rect size to its saved state 
 				widget.copyTo(widget.rectState, rect);
 				widget.rectState = {};
 			}
@@ -229,7 +243,6 @@
 
 			rect.setCursor(x, y);
 		}
-
 	};
 
 	var rect =
@@ -356,7 +369,7 @@
 			{
 				// set shade a background to half transparent
 				aCtx.fillStyle = "rgba(0, 0, 0, 0.5)";
-				aCtx.fillRect(0, 0, widget.canvasWidth, widget.canvasHeight);
+				aCtx.fillRect(0, 0, scene.width, scene.height);
 				aCtx.fill();
 				aCtx.drawImage(config.sceneImage, this.x, this.y, this.width, this.height, this.x, this.y, this.width, this.height);
 				// draw edges
@@ -430,7 +443,7 @@
 		
 		// callback, occured when the image
 		// successfully cropped
-		oncropCB: undefined,
+		// oncropCB: undefined,
 
 		// this object will keep a rect original size
 		// wich make a switching back from a fullscreen is possiable
@@ -471,7 +484,7 @@ iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAWklEQVR42mNgYGD4jwXPZ8AE83GoJUoz
 				applyButtonImage:      undefined
 			}, defaults, options);
 
-			widget.oncropCB = config.oncrop;
+			// widget.oncropCB = config.oncrop;
 
 			// this plugin is relevant for CANVAS elements only
 			if (widget.element.get(0).tagName !== "CANVAS")
@@ -504,13 +517,14 @@ iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAWklEQVR42mNgYGD4jwXPZ8AE83GoJUoz
 			}
 
 			resLoad(function() {
-				var $strip = $("<div>", {
-					"id": "cvs-strip",
-					"class": config.stripStyleClass
-				}).text("Crop");
+				// var $strip = $("<div>", {
+				// 	"id": "cvs-strip",
+				// 	"class": config.stripStyleClass
+				// }).text("Crop");
 
-				widget.canvasWidth  = widget.element.get(0).width;
-				widget.canvasHeight = widget.element.get(0).height;
+				scene.width  = widget.element.get(0).width;
+				scene.height = widget.element.get(0).height; 
+
 				widget.ctx = widget.element.get(0).getContext("2d");
 
 				// calculate default selected area
@@ -519,7 +533,7 @@ iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAWklEQVR42mNgYGD4jwXPZ8AE83GoJUoz
 				rect.x = Math.floor((config.sceneImage.width - rect.width) / 2);
 				rect.y = Math.floor((config.sceneImage.height - rect.height) / 2);
 
-				widget.element.append($strip);
+				// widget.element.append($strip);
 
 				// add fullscreen button
 				rect.addButton({
