@@ -387,7 +387,8 @@
 		
 		min_rect_width: 209,
 		min_rect_height: 110,
-		
+		stripStyleClass: "",
+
 		buttons: {
 			fullscreen: {
 				image: "fullscreen.png",
@@ -442,6 +443,10 @@
 	};
 
 	var config;
+	
+	/*
+iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAWklEQVR42mNgYGD4jwXPZ8AE83GoJUozPkMwBPTxGKBPjAHvcRiiD5XDasB8NAXvsRjwHs0CmHdQ/AwzJB6LAfFYXIcvvEYUoDgQKY5GqiQkqiZlijMTSdkZALr8aQGwFXbNAAAAAElFTkSuQmCC
+	*/
 
 	var methods = {
 
@@ -462,6 +467,7 @@
 			{
 				$.error("This widget works with CANVAS elements only!");
 			}
+
 
 			if (!widget.element.data("init"))
 			{
@@ -487,6 +493,11 @@
 			}
 
 			resLoad(function() {
+				var $strip = $("<div>", {
+					"id": "cvs-strip",
+					"class": config.stripStyleClass
+				}).text("Crop");
+
 				widget.canvasWidth  = widget.element.get(0).width;
 				widget.canvasHeight = widget.element.get(0).height;
 				widget.ctx = widget.element.get(0).getContext("2d");
@@ -496,6 +507,8 @@
 				rect.height = rect.width / config.proportion;
 				rect.x = Math.floor((config.sceneImage.width - rect.width) / 2);
 				rect.y = Math.floor((config.sceneImage.height - rect.height) / 2);
+
+				widget.element.append($strip);
 
 				// add fullscreen button
 				rect.addButton({
