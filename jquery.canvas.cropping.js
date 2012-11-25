@@ -11,7 +11,7 @@
 		{
 			if ( config.sceneImage )
 			{
-				aCtx.fillStyle = "black";
+				aCtx.fillStyle = "white";
 				aCtx.fillRect(0, 0, scene.width, scene.height);
 
 				var w, h;
@@ -91,8 +91,8 @@
 		{
 			return   aRect.x <= 0
 						|| aRect.y <= 0
-						|| aRect.width  > scene.workArea().width
-						|| aRect.height > scene.workArea().height;
+						|| aRect.width  >= scene.workArea().width
+						|| aRect.height >= scene.workArea().height;
 		},
 
 		minRectSize:
