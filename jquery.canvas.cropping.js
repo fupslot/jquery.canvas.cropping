@@ -55,6 +55,16 @@
 				widget.ctx.clearRect(0, 0, scene.width, scene.height);
 				widget.ctx.drawImage(image, posX, posY);
 
+				// if was a fullscreen mode
+				if ( mode.fullscreen )
+				{
+					// turning off a fullsceen mode,
+					// set a rect size to its saved state 
+					widget.copyTo(widget.rectState, rect);
+					widget.rectState = {};
+					mode.fullscreen = false;
+				}
+
 				if ( config.oncrop )
 				{
 					try {
@@ -409,6 +419,8 @@
 
 		proportion: 1.9,
 		
+		adjustByImage: false,
+
 		min_rect_width: 209,
 		min_rect_height: 110,
 		stripStyleClass: "",
@@ -424,18 +436,17 @@
 			}
 		},
 
-		// contain element relative to we have to
-		// calculate mouse coordinates
+		// contains an element id that a canvas relative to
+		// for better a coordinate determination
 		relativeTo: ""
-
 	};
 
 	var widget =
 	{
 		// canvas element
 		element:      undefined,
-		canvasWidth:  undefined,
-		canvasHeight: undefined,
+		// canvasWidth:  undefined,
+		// canvasHeight: undefined,
 		ctx:          undefined,
 
 		dragStart: {x:0, y:0},
@@ -491,10 +502,13 @@ iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAWklEQVR42mNgYGD4jwXPZ8AE83GoJUoz
 			{
 				$.error("This widget works with CANVAS elements only!");
 			}
-
+			
+			console.log("fullscreen mode: %s", mode.fullscreen);
 
 			if (!widget.element.data("init"))
 			{
+				console.log("jcc init");
+
 				widget.element.mousedown(function(e) {
 					var relOffset = scene.offset();
 					// console.log("top:%d, left:%d", this.offsetTop, this.offsetLeft);
@@ -522,10 +536,12 @@ iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAWklEQVR42mNgYGD4jwXPZ8AE83GoJUoz
 				// 	"class": config.stripStyleClass
 				// }).text("Crop");
 
-				scene.width  = widget.element.get(0).width;
-				scene.height = widget.element.get(0).height; 
+				scene.width  = widget.element.width();
+				scene.height = widget.element.height(); 
 
-				widget.ctx = widget.element.get(0).getContext("2d");
+				console.log("w: %s h: %s", scene.width, scene.height);
+
+				widget.ctx = widget.element[0].getContext("2d");
 
 				// calculate default selected area
 				rect.width  = Math.floor(config.sceneImage.width * 0.66);
@@ -566,10 +582,13 @@ iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAWklEQVR42mNgYGD4jwXPZ8AE83GoJUoz
 			if (e.type === "load")
 			{
 				// sets a canvas size according to a loaded image 
-				// widget.element.attr({
-				// 	width: config.sceneImage.width,
-				// 	height: config.sceneImage.height
-				// });
+				if (config.adjustByImage)
+				{
+					widget.element.attr({
+						width: config.sceneImage.width,
+						height: config.sceneImage.height
+					});
+				}
 
 				config.fullscreenButtonImage = new Image();
 				config.fullscreenButtonImage.onload = config.fullscreenButtonImage.onerror = function() {
