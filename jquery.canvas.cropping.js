@@ -520,6 +520,9 @@ iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAWklEQVR42mNgYGD4jwXPZ8AE83GoJUoz
 				.mouseup(function() {
 					scene.mouseUp();
 				})
+				.mouseout(function() {
+					scene.mouseUp();
+				})
 				.mousemove(function(e) {
 					// console.log("w:%d, h:%d", this.offsetTop, this.offsetLeft);
 					var relOffset = scene.offset();
@@ -527,14 +530,11 @@ iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAWklEQVR42mNgYGD4jwXPZ8AE83GoJUoz
 					var y = e.clientY - relOffset.top  - this.offsetTop;
 					scene.mouseMove(x, y);
 				});
+
 				widget.element.data("init", true);
 			}
 
 			resLoad(function() {
-				// var $strip = $("<div>", {
-				// 	"id": "cvs-strip",
-				// 	"class": config.stripStyleClass
-				// }).text("Crop");
 
 				scene.width  = widget.element.width();
 				scene.height = widget.element.height(); 
