@@ -312,7 +312,7 @@
 		drawEdges:
 		function(aCtx)
 		{
-			var edgeSize = 10; // square 10px
+			var edgeSize = 9; // square 10px
 			
 			for (var i = this.edges.length - 1; i >= 0; i--) {
 				var edge = this.edges[i];
@@ -346,7 +346,6 @@
 				// draw the edge area
 				aCtx.fillStyle = "rgba(0, 0, 0, 0.5)"; // half transparent
 				aCtx.fillRect(edge.x, edge.y, edge.width, edge.height);
-				aCtx.fill();
 			};
 		},
 
@@ -381,6 +380,7 @@
 				aCtx.fillStyle = "rgba(0, 0, 0, 0.5)";
 				aCtx.fillRect(0, 0, scene.width, scene.height);
 				aCtx.fill();
+				aCtx.strokeStyle = "white";
 				aCtx.drawImage(config.sceneImage, this.x, this.y, this.width, this.height, this.x, this.y, this.width, this.height);
 				// draw edges
 				this.drawEdges(aCtx);
@@ -424,6 +424,13 @@
 		min_rect_width: 209,
 		min_rect_height: 110,
 		stripStyleClass: "",
+
+		selectorMinSize:
+		{
+			width: 100,
+			height: 50
+		},
+
 
 		buttons: {
 			fullscreen: {
@@ -544,10 +551,16 @@ iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAWklEQVR42mNgYGD4jwXPZ8AE83GoJUoz
 				widget.ctx = widget.element[0].getContext("2d");
 
 				// calculate default selected area
-				rect.width  = Math.floor(config.sceneImage.width * 0.66);
-				rect.height = rect.width / config.proportion;
-				rect.x = Math.floor((config.sceneImage.width - rect.width) / 2);
-				rect.y = Math.floor((config.sceneImage.height - rect.height) / 2);
+				// rect.width  = Math.floor(config.sceneImage.width * 0.66);
+				// rect.height = rect.width / config.proportion;
+
+				rect.width  = config.min_rect_width;
+				rect.height = config.min_rect_height;
+				// rect.x = Math.floor((config.sceneImage.width - rect.width) / 2);
+				// rect.y = Math.floor((config.sceneImage.height - rect.height) / 2);
+				var workArea = scene.workArea();
+				rect.x = Math.floor((workArea.width - rect.width) / 2);
+				rect.y = Math.floor((workArea.height - rect.height) / 2);
 
 				// widget.element.append($strip);
 
