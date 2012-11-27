@@ -20,17 +20,18 @@
 				aCtx.drawImage(config.sceneImage, 0, 0, w, h);
 			}
 		},
+		
 		offset:
-		function()
+		function (el)
 		{
-			var offset = {top:0, left:0};
-			var relativeTo = $(config.relativeTo).position();
-			if ( relativeTo != null )
+			if ( !el ) { return; }
+			config.offset.top  += el.offsetTop;
+			config.offset.left += el.offsetLeft;
+			
+			if ( el.offsetParent )
 			{
-				offset.top  = relativeTo.top;
-				offset.left = relativeTo.left;
+				scene.offset(el.offsetParent);
 			}
-			return offset;
 		},
 
 		clip:
@@ -461,6 +462,10 @@
 	{
 		// image path for scene image
 		scene: "coffee.png",
+		
+		// the canvas size
+		canvasWidth: 300,
+		canvasHeigth:	150,	
 
 		// proportion: 1.9,
 		
@@ -469,20 +474,27 @@
 		min_rect_width: 209,
 		rect_prop: 1.9,
 
+		// calculates a Top and Left offsets for canvas
+		// need for a better determination of mouse positioning
+		// set to 'false' if you need fixed values
+		calculateOffset: true,
+
+		offset: {top: 0, left: 0 },
+
 		// possible values
 		// none - the rect would be resize to a certant size 
 		//        according to its proportion
 		// cover - the rect would be resized according to a work area
-		fullscreenMode: "cover", 
+		fullscreenMode: "none", 
 
-		stripStyleClass: "",
+		// not implemented yet
+		// stripStyleClass: "",
 
 		selectorMinSize:
 		{
 			width: 100,
 			height: 50
 		},
-
 
 		buttons: {
 			fullscreen: {
@@ -497,7 +509,8 @@
 
 		// contains an element id that a canvas relative to
 		// for better a coordinate determination
-		relativeTo: ""
+		// DEPRECATED
+		// relativeTo: ""
 	};
 
 	var widget =
@@ -509,6 +522,8 @@
 		ctx:          undefined,
 
 		dragStart: {x:0, y:0},
+
+		// the edge that a user pointing on
 		capturedEdge: undefined,
 		
 		// callback, occured when the image
@@ -557,6 +572,16 @@ iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAWklEQVR42mNgYGD4jwXPZ8AE83GoJUoz
 			// calculate rectangle's min height accordingly to its proportion
 			config.min_rect_height = config.min_rect_width / config.rect_prop;
 
+			// TODO: check if a canvas size equal or bigger that the min size for selector
+			// otherwise ignore user's size for a canvas and set a default one
+			// also it suppose to be big enought to fitt a selector in a fullscreen mode
+
+			// set a canvas size
+			widget.element.attr({
+				width:  config.canvasWidth,
+				height: config.canvasHeight
+			});
+
 			// widget.oncropCB = config.oncrop;
 
 			// this plugin is relevant for CANVAS elements only
@@ -571,11 +596,20 @@ iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAWklEQVR42mNgYGD4jwXPZ8AE83GoJUoz
 			{
 				// console.log("jcc init");
 
+				if ( config.calculateOffset )
+				{
+					// *** calculate an Top and Left offsets
+					config.offset = { top: 0, left: 0 };
+					scene.offset(widget.element[0]);
+				}
+
 				widget.element.mousedown(function(e) {
-					var relOffset = scene.offset();
-					// console.log("top:%d, left:%d", this.offsetTop, this.offsetLeft);
-					var x = e.clientX - relOffset.left - this.offsetLeft;
-					var y = e.clientY - relOffset.top  - this.offsetTop;
+					// var relOffset = scene.offset();
+					// console.log("offset: top:%d, left:%d", config.offset.top, config.offset.left);
+					// var x = e.clientX - relOffset.left - this.offsetLeft;
+					// var y = e.clientY - relOffset.top  - this.offsetTop;
+					var x = e.clientX - config.offset.left;
+					var y = e.clientY - config.offset.top;
 					// console.log("x:%d, y:%d", x, y);
 					scene.mouseDown(x, y);
 				})
@@ -587,9 +621,13 @@ iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAWklEQVR42mNgYGD4jwXPZ8AE83GoJUoz
 				})
 				.mousemove(function(e) {
 					// console.log("w:%d, h:%d", this.offsetTop, this.offsetLeft);
-					var relOffset = scene.offset();
-					var x = e.clientX - relOffset.left - this.offsetLeft;
-					var y = e.clientY - relOffset.top  - this.offsetTop;
+					// console.log("offset: top:%d, left:%d", config.offset.top, config.offset.left);
+					// var relOffset = scene.offset();
+					// var x = e.clientX - relOffset.left - this.offsetLeft;
+					// var y = e.clientY - relOffset.top  - this.offsetTop;
+					var x = e.clientX - config.offset.left;
+					var y = e.clientY - config.offset.top;
+					
 					scene.mouseMove(x, y);
 				});
 

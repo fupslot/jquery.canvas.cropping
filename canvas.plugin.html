@@ -8,10 +8,13 @@
 		<script type="text/javascript" src="jquery.canvas.cropping.js"></script>
 		<script type="text/javascript">
 			$(document).ready(function() {
-				var $canvas = $("<canvas>").attr({"width": "350px",
-					"height": "587px"}).appendTo("body");
-				$canvas.cropping({
+				// var $canvas = $("<canvas>").attr({"width": "350px",
+					// "height": "587px"}).appendTo("body");
+				$("#cnv").cropping({
 					scene: "111.jpg",
+
+					// canvasWidth: 300,
+					// canvasHeight: 300,
 
 					min_rect_width: 200,
 					rect_prop: 1.6,
@@ -19,13 +22,31 @@
 
 					oncrop: function(){console.log("hello");}
 				});
+				
+				var offset = {top:0, left:0};
+
+				var calcOffset = function (el)
+				{
+					if ( !el ) { return; }
+					offset.top  += el.offsetTop;
+					offset.left += el.offsetLeft;
 					
+					if ( el.offsetParent )
+					{
+						calcOffset(el.offsetParent);
+					}
+				}
+
+				calcOffset( document.getElementById("cnv") );
+				
+				console.dir(offset);
 			});
 		</script>
 	</head>
 	<body>
-		<!-- <canvas id="cnv" width="650" height="487" style="border:1px solid"></canvas> -->
+		<div id="strip"><h2 style="text-align:center;">header</h2></div>
+			<div style="position:absolute; top:5px; left:5px;">
+				<canvas id="cnv"></canvas>
+			</div>
 	</body>
-		
-	
 </html>
