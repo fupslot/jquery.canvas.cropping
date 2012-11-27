@@ -89,10 +89,10 @@
 		outOfBoundary:
 		function(aRect)
 		{
-			return   aRect.x <= 0
-						|| aRect.y <= 0
-						|| aRect.width  >= scene.workArea().width
-						|| aRect.height >= scene.workArea().height;
+			return   aRect.x < 0
+						|| aRect.y < 0
+						|| aRect.width  > scene.workArea().width
+						|| aRect.height > scene.workArea().height;
 		},
 
 		minRectSize:
@@ -109,7 +109,34 @@
 			{
 				// saving a rect size in order to come back to its current state when a fullscreen mmode is turned off
 				widget.copyTo(rect, widget.rectState);
-				widget.copyTo({x: 0, y: 0, width: scene.workArea().width, height: scene.workArea().height}, rect);
+				var workArea = scene.workArea();
+				
+				if ( config.fullscreenMode == "none")
+				{
+					var fullRect = { x:0, y:0, width:0, height:0 };
+					
+					widget.copyTo(rect, fullRect);
+
+					fullRect.x = 0;
+					fullRect.width  = workArea.width;
+					fullRect.height = workArea.width / config.rect_prop;
+					// if the Y coordinate is out of work area boundary 
+					if ( (fullRect.y + fullRect.height) > workArea.height )
+					{
+						// move the rect up, until its size is certant to 
+						// a work area and not make any collisions
+						var dy = (fullRect.y + fullRect.height) - workArea.height;
+						fullRect.y -= dy;
+					}
+		
+					widget.copyTo(fullRect, rect);
+				}
+				
+				if ( config.fullscreenMode == "cover")
+				{
+					widget.copyTo({x: 0, y: 0, width: scene.workArea().width, height: scene.workArea().height}, rect);
+				}
+					
 			}
 			else
 			{
@@ -140,6 +167,7 @@
 			// click on selecting area
 			if (rect.contain(x, y)) {
 				mode.dragging = true; //dragging mode
+				console.log("drag mode on");
 				return;
 			}
 
@@ -163,15 +191,21 @@
 		function(x, y)
 		{
 			var dx = 0, dy = 0;
-			if (!mode.fullscreen && ( mode.dragging || mode.expanding ))
+			if (/*!mode.fullscreen && */( mode.dragging || mode.expanding ))
 			{
 				scene.clear(widget.ctx);
-				if ( x < widget.dragStart.x ) {
-					dx = -(widget.dragStart.x - x);
+				// x coordinate does not change
+				// when the rect is expanded (fullscreen mode)
+				if ( !mode.fullscreen )
+				{
+					if ( x < widget.dragStart.x ) {
+						dx = -(widget.dragStart.x - x);
+					}
+					else {
+						dx = x - widget.dragStart.x;
+					}
 				}
-				else {
-					dx = x - widget.dragStart.x;
-				}
+
 				if ( y < widget.dragStart.y ) {
 					dy = -(widget.dragStart.y - y);
 				}
@@ -179,15 +213,16 @@
 					dy = y - widget.dragStart.y;
 				}
 			}
+			// console.log("fullscreen mode: %s", mode.fullscreen);
 			// make copy of the original object to safety manipulate its properties
 			var rectCopy = {};
 			widget.copyTo(rect, rectCopy);
 
-			if (!mode.fullscreen && mode.dragging)
+			if (/*!mode.fullscreen &&*/ mode.dragging)
 			{
 				rectCopy.x += dx;
 				rectCopy.y += dy;
-
+				// console.log("x: %d; y: %d", rectCopy.x, rectCopy.y);
 				widget.dragStart.x += dx;
 				widget.dragStart.y += dy;
 				// make sute that a user not drag out of the visible area
@@ -200,43 +235,50 @@
 					}
 				))
 				{
-
 					rect.x = rectCopy.x;
 					rect.y = rectCopy.y;
 					rect.width  = rectCopy.width;
 					rect.height = rectCopy.height;
 				}
+					// console.log("out of boundary");
 				rect.draw(widget.ctx);
 			}
 
-			if ( !mode.fullscreen && mode.expanding )
+			if ( /*!mode.fullscreen &&*/ mode.expanding )
 			{
+					// console.log("a");
 				// up & left
 				if ( widget.capturedEdge.cursor === "nw-resize" )
 				{
 					rectCopy.x += dx;
 					rectCopy.width  -= dx;
-					rectCopy.y -=  (rectCopy.width / config.proportion) - rectCopy.height;
-					rectCopy.height = rectCopy.width / config.proportion;
+					// rectCopy.y -=  (rectCopy.width / config.proportion) - rectCopy.height;
+					rectCopy.y -=  (rectCopy.width / config.rect_prop) - rectCopy.height;
+					// rectCopy.height = rectCopy.width / config.proportion;
+					rectCopy.height = rectCopy.width / config.rect_prop;
 				}
 				// up & right
 				if (widget.capturedEdge.cursor === "ne-resize")
 				{
 					rectCopy.width += dx;
-					rectCopy.y -= (rectCopy.width / config.proportion) - rectCopy.height;
-					rectCopy.height = rectCopy.width / config.proportion;
+					// rectCopy.y -= (rectCopy.width / config.proportion) - rectCopy.height;
+					rectCopy.y -= (rectCopy.width / config.rect_prop) - rectCopy.height;
+					// rectCopy.height = rectCopy.width / config.proportion;
+					rectCopy.height = rectCopy.width / config.rect_prop;
 				}
 				if ( widget.capturedEdge.cursor === "se-resize" )
 				{
 					rectCopy.width += dx; 
-					rectCopy.height = rectCopy.width / config.proportion;
+					// rectCopy.height = rectCopy.width / config.proportion;
+					rectCopy.height = rectCopy.width / config.rect_prop;
 				}
 				// down & left
 				if ( widget.capturedEdge.cursor === "sw-resize")
 				{
 					rectCopy.x += dx;
 					rectCopy.width -= dx;
-					rectCopy.height = rectCopy.width / config.proportion;
+					// rectCopy.height = rectCopy.width / config.proportion;
+					rectCopy.height = rectCopy.width / config.rect_prop;
 				}
 				widget.dragStart.x += dx;
 				widget.dragStart.y += dy;
@@ -247,7 +289,11 @@
 				{
 					widget.copyTo(rectCopy, rect);
 				}
-				
+				else
+				{
+					console.log("min size riched: %s, out of boundary: %s", scene.minRectSize(rectCopy), scene.outOfBoundary(rectCopy));
+				}
+
 				rect.draw(widget.ctx);
 			}
 
@@ -374,8 +420,8 @@
 		draw:
 		function(aCtx)
 		{
-			if ( !mode.fullscreen )
-			{
+			// if ( !mode.fullscreen )
+			// {
 				// set shade a background to half transparent
 				aCtx.fillStyle = "rgba(0, 0, 0, 0.5)";
 				aCtx.fillRect(0, 0, scene.width, scene.height);
@@ -384,7 +430,7 @@
 				aCtx.drawImage(config.sceneImage, this.x, this.y, this.width, this.height, this.x, this.y, this.width, this.height);
 				// draw edges
 				this.drawEdges(aCtx);
-			}
+			// }
 			this.drawButtons(aCtx);
 		},
 
@@ -396,20 +442,19 @@
 				widget.element.css("cursor", "pointer");
 				return;
 			}
-			if ( !mode.fullscreen && this.contain(x, y) )
+			if ( !(mode.fullscreen && config.fullscreenMode == "cover") && this.contain(x, y) )
 			{
 				widget.element.css("cursor", "move");
 				return;
 			}
 			var edge = this.containEdge(x, y);
-			if ( !mode.fullscreen && edge )
+			if ( /*!mode.fullscreen &&*/ edge )
 			{
 				widget.element.css("cursor", edge.cursor);
 				return;
 			}
 			widget.element.css("cursor", "default");
 		}
-
 	};
 
 	var defaults =
@@ -417,12 +462,19 @@
 		// image path for scene image
 		scene: "coffee.png",
 
-		proportion: 1.9,
+		// proportion: 1.9,
 		
 		adjustByImage: false,
 
 		min_rect_width: 209,
-		min_rect_height: 110,
+		rect_prop: 1.9,
+
+		// possible values
+		// none - the rect would be resize to a certant size 
+		//        according to its proportion
+		// cover - the rect would be resized according to a work area
+		fullscreenMode: "cover", 
+
 		stripStyleClass: "",
 
 		selectorMinSize:
@@ -502,6 +554,9 @@ iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAWklEQVR42mNgYGD4jwXPZ8AE83GoJUoz
 				applyButtonImage:      undefined
 			}, defaults, options);
 
+			// calculate rectangle's min height accordingly to its proportion
+			config.min_rect_height = config.min_rect_width / config.rect_prop;
+
 			// widget.oncropCB = config.oncrop;
 
 			// this plugin is relevant for CANVAS elements only
@@ -510,11 +565,11 @@ iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAWklEQVR42mNgYGD4jwXPZ8AE83GoJUoz
 				$.error("This widget works with CANVAS elements only!");
 			}
 			
-			console.log("fullscreen mode: %s", mode.fullscreen);
+			// console.log("fullscreen mode: %s", mode.fullscreen);
 
 			if (!widget.element.data("init"))
 			{
-				console.log("jcc init");
+				// console.log("jcc init");
 
 				widget.element.mousedown(function(e) {
 					var relOffset = scene.offset();
@@ -546,7 +601,7 @@ iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAWklEQVR42mNgYGD4jwXPZ8AE83GoJUoz
 				scene.width  = widget.element.width();
 				scene.height = widget.element.height(); 
 
-				console.log("w: %s h: %s", scene.width, scene.height);
+				// console.log("w: %s h: %s", scene.width, scene.height);
 
 				widget.ctx = widget.element[0].getContext("2d");
 

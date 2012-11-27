@@ -8,13 +8,15 @@
 		<script type="text/javascript" src="jquery.canvas.cropping.js"></script>
 		<script type="text/javascript">
 			$(document).ready(function() {
-				var $canvas = $("<canvas>", {
-					"width": "650px",
-					"height": "287px"
-				}).attr({"width": "650px",
-					"height": "287px"}).appendTo("body");
+				var $canvas = $("<canvas>").attr({"width": "350px",
+					"height": "587px"}).appendTo("body");
 				$canvas.cropping({
-					image: "coffee.png",
+					scene: "111.jpg",
+
+					min_rect_width: 200,
+					rect_prop: 1.6,
+					// min_rect_height: 100,
+
 					oncrop: function(){console.log("hello");}
 				});
 					
